@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+          integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+            integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+            crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+            integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+            crossorigin="anonymous"></script>
+
+    <!--    구글 폰트    -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Hahmlet:wght@200&display=swap" rel="stylesheet">
+
+    <!--    타이틀    -->
+    <title>항해99 블로그</title>
+
+    <!--    og태그-->
+    <meta property="og:title" content="항해99 블로그">
+    <meta property="og:description" content="항해99를 하면서 이야기나눠봐요">
+    <meta property="og:image" content="images/ogimage.jpg">
+
+    <style>
+
+        /*전체폰트*/
+        .font {
+            font-family: 'Hahmlet', serif;
+        }
+
+        /*배너*/
+        .top {
+            height : 200px;
+            background-color: beige;
+            padding-top : 70px;
+            padding-left: 50px;
+            margin-bottom: 50px;
+        }
+
+        /*페이지 아래 작성하기 버튼 가운데 정렬*/
+        .foot {
+            width: 120px;
+            height:50px;
+            margin: 50px auto 50px auto;
+
+        }
+    </style>
+
+    <script>
+
+        // HTML 문서를 로드할 때마다 실행하도록 한다.
+        $(document).ready(function () {
+            getPost();
+        })
+
+        // 모든 게시글 조회하기
+        function getPost() {
+            // GET API를 사용해 게시글 리스트를 받아와 HTML로 붙인다.
+            $.ajax({
+                // 1. GET API를 사용해 게시글 리스트 받아온다.
+                type: 'GET',
+                url: '/api/posts',
+                success: function (response) {
+                    // 2. 게시글리스트의 각 게시글을 HTML로 붙인다.
+                    for (let i=0;i<response.length;i++) {
+                        let id = response[i]['id'];
+                        let title = response[i]['title'];
+                        let username = response[i]['username'];
+                        let createDate = response[i]['createdAt'];
+                        // 1) HTML 태그를 만든다.
+                        // 테이블의 각 행을 onclick하면 getOnePost(해당게시글아이디)함수가 실행되도록 설정
+                        let temp_html = `<tr data-toggle="modal" data-target="#onePost" onclick="getOnePost(${id})">
+                                            <th scope="row">${id}</th>
+                                            <td>${title}</td>
+                                            <td>${username}</td>
+                                            <td>${createDate}</td>
+                                        </tr>`;
+                        // 2) #post-body에 HTML을 붙인다.
+                        $('#post-body').append(temp_html);
+                    }
+                }
+            })
+        }
+
+        // 선택한 게시글 삭제하기
+        function deletePost(id) {
+            // DELETE 요청으로 메모를 삭제한다.
+            $.ajax({
+                type: "DELETE",
+                // url 주소를 백틱``에 담아 파리미터로 받은 id 값이 들어가도록 설정
+                url: `/api/posts/${id}`,
+                success: function (response) {
+                    alert('삭제 완료!');
+                    window.location.reload();
+                }
+            })
+        }
+
+        // 선택한 게시글 조회하기
+        function getOnePost(id) {
+            // 1. 기존 내용을 지운다.
+            $('#one-title').empty();
+            $('#one-contents').empty();
+            $('#one-btn').empty();
+            // 2. GET 요청으로 선택한 게시글의 데이터를 받아와 HTML로 붙인다.
+            $.ajax({
+                type: 'GET',
+                // url 주소를 백틱``에 담아 파리미터로 받은 id 값이 들어가도록 설정
+                url: `/api/posts/${id}`,
+                success: function (response) {
+                    let title = response['title'];
+                    let username = response['username'];
+                    let date = response['createdAt'];
+                    let contents = response['contents'];
+                    // 1) HTML을 만든다.
+                    let temp_title = `${title}`
+                    let temp_contents = `<p>작성자 : ${username}</p>
+                                        <p>작성일 : ${date}</p>
+                                        <p>${contents}</p>`
+                    // 버튼을 onclick 하면 deletePost(해당게시글아이디) 함수가 실행되도록 설정
+                    let temp_btn =`<button type="button" class="btn btn-secondary" onclick="deletePost(${id})">삭제하기</button>`
+                    // 2) 각각을 #one-title, #one-contents, #one-btn에 붙인다.
+                    $('#one-title').append(temp_title);
+                    $('#one-contents').append(temp_contents);
+                    $('#one-btn').append(temp_btn);
+                }
+            })
+        }
+
+        // 게시글 저장하기
+        function addPost() {
+            // 1. 작성한 게시글 내용을 불러온다.
+            let title = $('#input-title').val();
+            let username = $('#input-username').val();
+            let contents = $('#input-contents').val();
+
+            // 2. 작성한 게시글이 올바른지 확인한다.
+            if (title == "") {
+                alert("제목을 입력해주세요")
+                return;
+            } else if (username == "") {
+                alert("이름을 입력해주세요")
+                return;
+            } else if (contents == "") {
+                alert("내용을 입력해주세요")
+                return;
+            } else if (contents.trim().length >255) {
+                alert("내용은 255자까지만 입력가능합니다.")
+                return;
+            }
+
+            // 3. 전달할 데이터를 JSON 형식으로 만든다.
+            let data = {'title':title, 'username':username, 'contents':contents};
+
+            // 4. POST 요청으로 서버에 데이터를 전달한다.
+            $.ajax({
+                    type: "POST",
+                    url: "/api/posts",
+                    contentType: "application/json", // JSON 형식으로 전달함을 알리기
+                    data: JSON.stringify(data), // 기본적으로 문자열로만 주고받을 수 있다.
+                    success: function (response) {
+                        alert('작성글이 게시되었습니다');
+                        window.location.reload(); // 새로고침
+                    }
+                });
+        }
+
+
+    </script>
+</head>
+
+<body class="font">
+    <!--            배너 영역           -->
+    <div class="top">
+        <h1>항해99 블로그</h1>
+    </div>
+
+    <!--         게시글 목록 영역         -->
+    <div>
+        <table class="table">
+            <!--        게시글 목록 맨 윗줄          -->
+            <thead class="thead-light">
+            <tr>
+                <th scope="col"></th>
+                <th scope="col">제목</th>
+                <th scope="col">작성자</th>
+                <th scope="col">작성일</th>
+            </tr>
+            </thead>
+            <!--        게시글 목록 바디 영역           -->
+            <tbody id="post-body">
+            </tbody>
+        </table>
+    </div>
+
+    <!--            작성 버튼           -->
+    <div class="foot">
+        <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#posting">글 작성하기</button>
+    </div>
+
+    <!--           글 작성 모달창         -->
+    <div id="posting" class="modal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <!--        모달 제목 영역         -->
+                <div class="modal-header">
+                    <!-- 제목 입력 input -->
+                    <input type="text" style="width:50%" placeholder="제목을 입력하세요" id="input-title">
+                    <!-- 창 닫기 X버튼 -->
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <!--       모달 바디 영역         -->
+                <div class="modal-body">
+                    <!-- 이름 입력  -->
+                    <input type="text" style="width:50%;margin-bottom: 20px" placeholder="이름을 입력하세요" id="input-username">
+                    <!-- 내용 입력 -->
+                    <textarea id="input-contents" style="width:100%" placeholder="내용을 입력하세요"></textarea>
+                </div>
+                <!--        모달 바닥 영역        -->
+                <div class="modal-footer">
+                    <!-- 글쓰기 완료 버튼 (addPost()) -->
+                    <button type="button" class="btn btn-primary" onclick="addPost()">글쓰기</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!--         게시글 상세 모달창          -->
+    <div id="onePost" class="modal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <!--        모달 제목 영역         -->
+                <div class="modal-header">
+                    <!-- 게시글 제목, 게시글 제목이 들어감 -->
+                    <h5 class="modal-title" id="one-title"></h5>
+                    <!-- 창 닫기 X버튼 -->
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <!--       모달 바디 영역, 작성자, 작성날짜, 작성내용이 들어감         -->
+                <div class="modal-body" id="one-contents">
+                </div>
+                <!--        모달 바닥 영역        -->
+                <div class="modal-footer">
+                    <!-- 닫기 버튼 -->
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">닫기</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
